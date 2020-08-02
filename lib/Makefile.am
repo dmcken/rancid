@@ -9,6 +9,7 @@ my_pkglib_DATA = rancid.pm acos.pm aeos.pm arbor.pm arcos.pm avocent.pm \
 		 dell.pm dnos9.pm dnos10.pm edgemax.pm edgerouter.pm exos.pm \
 		 fortigate.pm foundry.pm frr.pm fss2.pm fxos.pm \
 		 ios.pm iossb.pm iosshtech.pm iosxr.pm junos.pm mrv.pm nxos.pm \
+		 ocnos.pm \
 		 panos.pm rbt.pm routeros.pm smc.pm sros.pm vrp.pm wavesvros.pm 
 pkglib_in = $(my_pkglib_DATA:%=%.in)
 
@@ -86,6 +87,7 @@ rancid.pm: rancid.pm.in
 rancid.py: rancid.py.in
 mrv.pm: mrv.pm.in
 nxos.pm: nxos.pm.in
+ocnos.pm: ocnos.pm.in
 panos.pm: panos.pm.in
 rbt.pm: rbt.pm.in
 routeros.pm: routeros.pm.in
