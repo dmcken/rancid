@@ -33,7 +33,8 @@ our $I0;
 
 # load-time initialization
 sub import {
-
+    # Set the terminal, OcNOS does not recognize
+    # the NETWORK terminal type
     $ENV{'TERM'} = "vt100";
 
     0;
@@ -118,3 +119,17 @@ sub ShowVersion {
     return(0);
 }
 
+# This routine parses a single command that returns no required info; the
+# input is discarded.
+sub RunCommand {
+    my($INPUT, $OUTPUT, $cmd) = @_;
+    print STDERR "    In RunCommand: $_" if ($debug);
+
+    while (<$INPUT>) {
+	tr/\015//d;
+	last if (/^$prompt/);
+    }
+    return(0);
+}
+
+1;
