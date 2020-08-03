@@ -53,7 +53,9 @@ sub inloop {
 TOP: while(<$INPUT>) {
 	tr/\015//d;
 
-	if (/[>#]\s?exit$/) {
+        print "processing line $. : ", $_; if($debug)
+
+	if (/[>#]\s?(exit|quit)$/) {
 	    print STDERR ("$host: found exit\n") if ($debug);
 	    $clean_run = 1;
 	    last;
