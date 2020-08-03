@@ -33,6 +33,9 @@ our $I0;
 
 # load-time initialization
 sub import {
+
+    $ENV{'TERM'} = "vt100";
+
     0;
 }
 
