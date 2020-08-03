@@ -50,10 +50,12 @@ sub inloop {
     my($INPUT, $OUTPUT) = @_;
     my($cmd, $rval);
 
+    print STDERR ("Commands REGEX: $cmds_regexp \n") if($debug);
+
 TOP: while(<$INPUT>) {
 	tr/\015//d;
 
-        print "processing line $. : ", $_; if($debug)
+        print STDERR ("processing line: $_ ") if($debug);
 
 	if (/[>#]\s?(exit|quit)$/) {
 	    print STDERR ("$host: found exit\n") if ($debug);
@@ -66,10 +68,11 @@ TOP: while(<$INPUT>) {
 	    $clean_run = 0;
 	    last;
 	}
-	while (/#\s*($cmds_regexp)\s*$/) {
+	while (/[#>]\s*($cmds_regexp)\s*$/) {
+            print STDERR ("Matched command: $1") if ($debug);
 	    $cmd = $1;
 	    if (!defined($prompt)) {
-		$prompt = ($_ =~ /^([^#]+#)/)[0];
+		$prompt = ($_ =~ /^([^#>]+[#>])/)[0];
 		$prompt =~ s/([][}{)(\\])/\\$1/g;
 		print STDERR ("PROMPT MATCH: $prompt\n") if ($debug);
 	    }
