@@ -10,23 +10,12 @@ package ocnos;
 use 5.010;
 use strict 'vars';
 use warnings;
-#no warnings 'uninitialized';
+no warnings 'uninitialized';
+
 require(Exporter);
 our @ISA = qw(Exporter);
 
 use rancid @VERSION@;
-
-our $proc;
-our $found_env;
-our $found_diag;
-our $found_version;
-
-our $type;              # device model, from ShowVersion
-
-our $C0;                # output formatting control
-our $E0;
-our $H0;
-our $I0;
 
 @ISA = qw(Exporter rancid main);
 #XXX @Exporter::EXPORT = qw($VERSION @commandtable %commands @commands);
@@ -42,6 +31,9 @@ sub import {
 
 # post-open(collection file) initialization
 sub init {
+    # Output header
+    ProcessHistory("","","","#RANCID-CONTENT-TYPE: $devtype\n#\n");
+
     0;
 }
 
@@ -55,9 +47,9 @@ sub inloop {
 TOP: while(<$INPUT>) {
 	tr/\015//d;
 
-        print STDERR ("processing line: $_ ") if($debug);
+        print STDERR ("Processing line: $_") if($debug);
 
-	if (/[>#]\s?(exit|quit)$/) {
+	if (/[>#]\s?exit$/) {
 	    print STDERR ("$host: found exit\n") if ($debug);
 	    $clean_run = 1;
 	    last;
@@ -69,7 +61,7 @@ TOP: while(<$INPUT>) {
 	    last;
 	}
 	while (/[#>]\s*($cmds_regexp)\s*$/) {
-            print STDERR ("Matched command: $1") if ($debug);
+            print STDERR ("Matched command: $1\n") if ($debug);
 	    $cmd = $1;
 	    if (!defined($prompt)) {
 		$prompt = ($_ =~ /^([^#>]+[#>])/)[0];
@@ -77,16 +69,25 @@ TOP: while(<$INPUT>) {
 		print STDERR ("PROMPT MATCH: $prompt\n") if ($debug);
 	    }
 	    print STDERR ("HIT COMMAND:$_") if ($debug);
+            # These are the commands we don't need the output from
+            if ($cmd =~ /^(terminal length 0|terminal width 132)/) {
+                print STDERR ("Skipping command: $cmd\n") if ($debug);
+                DiscardCommand($INPUT, $OUTPUT, $cmd);
+                if (defined($commands{$cmd})) {
+                    delete($commands{$cmd});
+                }
+                next;
+            }
 	    if (! defined($commands{$cmd})) {
-		print STDERR "$host: found unexpected command - \"$cmd\"\n";
-		$clean_run = 0;
-		last TOP;
+                print STDERR "$host: found unexpected command - \"$cmd\"\n";
+                $clean_run = 0;
+                last TOP;
 	    }
 	    if (! defined(&{$commands{$cmd}})) {
-		printf(STDERR "$host: undefined function - \"%s\"\n",
-		       $commands{$cmd});
-		$clean_run = 0;
-		last TOP;
+                printf(STDERR "$host: undefined function - \"%s\"\n",
+                       $commands{$cmd});
+                $clean_run = 0;
+                last TOP;
 	    }
 	    $rval = &{$commands{$cmd}}($INPUT, $OUTPUT, $cmd);
 	    delete($commands{$cmd});
@@ -98,32 +99,42 @@ TOP: while(<$INPUT>) {
 	    if (/[>#]\s?exit$/) {
 		print STDERR ("$host: found exit\n") if ($debug);
 		$clean_run = 1;
+                $found_end = 1;
 		last TOP;
 	    }
 	}
     }
 }
 
-# This routine parses "show version"
-sub ShowVersion {
-    my($INPUT, $OUTPUT) = @_;
+sub DiscardCommand {
+    my($INPUT, $OUTPUT, $cmd) = @_;
     my($slot);
 
-    print STDERR "    In ShowVersion: $_" if ($debug);
+    print STDERR "Entered DiscardCommand '$cmd'\n" if ($debug);
 
     while (<$INPUT>) {
-	tr/\015//d;
-	last if (/^$prompt/);
-	next if (/^\s+\^$/);
-        return(1) if (/invalid (input|command) detected/i);
-        return(-1) if (/^plat exception:/i);	# failure to connect?
-	next if /^\s*$/;
-
-	next if (/^(uptime|copyright):/i);
-
-	ProcessHistory("VERSION","","","#$_");
+        tr/\015//d;
+        print STDERR ("Processing line DiscardCommand: $_") if($debug);
+        last if (/^$prompt/);
     }
-    ProcessHistory("VERSION","","","#\n");
+    print STDERR ("Leaving DiscardCommand: $_") if($debug);
+    return(0);
+}
+
+sub OutputCommand {
+    my($INPUT, $OUTPUT, $cmd) = @_;
+    my($slot);
+
+    print STDERR "Entered OutputCommand '$cmd'\n" if ($debug);
+    ProcessHistory("","","","# >>> $cmd\n");
+
+    while (<$INPUT>) {
+        tr/\015//d;
+        print STDERR ("Processing line OutputCommand: $_") if($debug);
+        last if (/^$prompt/);
+        ProcessHistory("","","","$_");
+    }
+    ProcessHistory("","","","#\n");
     return(0);
 }
 
