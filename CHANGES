@@ -1,4 +1,15 @@
 3.12.99
+	smc.pm: filter module uptime on PowerConnect 5524
+
+	nxos.pm: filter fluctuating WWNs
+
+	arcos.pm: show features command no longer exposed in ~4.x
+
+	sros.pm: end of config marker disappeared ~20.5, to be fixed in 20.7r1.
+	Use the MD context marker as an alternative marker
+
+	jlogin: adjust code to set screen with for -s and -c
+
 	lg.cgi, lgform.cgi: fix missing variable inializations - Troy Boudreau
 
 	ios.pm: ASAv fails to read licensing debug info sometimes
