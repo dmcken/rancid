@@ -127,13 +127,24 @@ sub OutputCommand {
 
     print STDERR "Entered OutputCommand '$cmd'\n" if ($debug);
     ProcessHistory("","","","# >>> $cmd\n");
+    ProcessHistory("","","","#\n");
+
+    my $output = "";
 
     while (<$INPUT>) {
         tr/\015//d;
         print STDERR ("Processing line OutputCommand: $_") if($debug);
         last if (/^$prompt/);
-        ProcessHistory("","","","$_");
+        $output .= $_;
     }
+
+    if (index($output, "Invalid input detected at") != -1) {
+        ProcessHistory("","","","# Command not implemented on this platform\n");
+    } else {
+        ProcessHistory("","","","$output");
+    }
+
+
     ProcessHistory("","","","#\n");
     return(0);
 }
